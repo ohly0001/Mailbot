@@ -8,8 +8,8 @@ load_dotenv()
 
 mail = imaplib.IMAP4_SSL(os.getenv('IMAP4_SSL'))
 mail.login(
-    os.getenv('GMAIL_ADDRESS'),
-    os.getenv('GMAIL_APP_PASSWORD')
+    os.getenv('ADDRESS'),
+    os.getenv('APP_PASS')
 )
 
 mail.select("INBOX")

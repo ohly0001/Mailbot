@@ -1,5 +1,7 @@
 ## .env File
 Create a .env file with the following fields\
 `IMAP4_SSL=imap.gmail.com`\
-`GMAIL_ADDRESS='bot gmail address goes here'`\
-`GMAIL_APP_PASSWORD='bot google account app password goes here'`
+`ADDRESS='Bot account address goes here'`\
+`APP_PASS='Bot account app password goes here. Whitespace delimiters are important'`\
+`ACCESS_TOKEN='Hugging Face user access token goes here'`\
+`MODEL=meta-llama/Llama-2-7b-chat-hf`
