@@ -1,0 +1,11 @@
+IMAP4_SSL=imap.gmail.com
+ADDRESS=`Bot address goes here...`
+APP_PASS=`Google app password goes here...`
+
+ACCESS_TOKEN=`Huggingface account access token goes here...`
+MODEL=meta-llama/Llama-2-7b-chat-hf
+TF_ENABLE_ONEDNN_OPTS=0
+
+MYSQL_USER=`MySQL user name goes here...`
+MYSQL_PASS=`MySQL user password goes here...`
+MYSQL_DB=`MYSQL database name goes here`

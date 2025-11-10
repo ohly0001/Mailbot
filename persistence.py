@@ -36,9 +36,9 @@ class db_controller:
 		pass
 
 def _cleanup(self):
-		if notself.mycursor:
+		if not self.mycursor:
 			self.mycursor.close()
-		if notself.mydb:
+		if not self.mydb:
 			self.mydb.close()
 
 if __name__=='__main__':
