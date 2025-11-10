@@ -1,27 +1,23 @@
-IF DB_ID('Mailbot') IS NULL CREATE DATABASE Mailbot;
-GO
+CREATE DATABASE IF NOT EXISTS Mailbot;
 USE Mailbot;
-GO
 
 CREATE TABLE emails(
-    email_id INT IDENTITY PRIMARY KEY,
-    subject_line NVARCHAR(255),
-    body_text NVARCHAR(MAX),
-    sent_on DATETIME2,
-    read_on DATETIME2 DEFAULT CURRENT_TIMESTAMP
+    email_id INT AUTO_INCREMENT PRIMARY KEY,
+    subject_line VARCHAR(255),
+    body_text TEXT,
+    sent_on DATETIME,
+    read_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE correspondent_whitelist(
-    correspondent_id INT IDENTITY PRIMARY KEY,
-    preferred_name NVARCHAR(100),
-    email_address NVARCHAR(254) UNIQUE NOT NULL
+    correspondent_id INT AUTO_INCREMENT PRIMARY KEY,
+    preferred_name VARCHAR(100),
+    email_address VARCHAR(254) UNIQUE NOT NULL
 );
 
 CREATE TABLE email_correspondents(
-    correspondent_id INT FOREIGN KEY 
-    REFERENCES correspondent_whitelist(correspondent_id) 
-    ON DELETE CASCADE,
-    email_id INT FOREIGN KEY (email_id) 
-    REFERENCES emails(email_id) 
-    ON DELETE CASCADE
+    correspondent_id INT NOT NULL,
+    email_id INT NOT NULL,
+    FOREIGN KEY (email_id) REFERENCES emails(email_id) ON DELETE CASCADE,
+    FOREIGN KEY (correspondent_id) REFERENCES correspondent_whitelist(correspondent_id) ON DELETE CASCADE
 );
