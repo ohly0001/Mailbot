@@ -8,4 +8,4 @@ TF_ENABLE_ONEDNN_OPTS=0
 
 MYSQL_USER=`MySQL user name goes here...`
 MYSQL_PASS=`MySQL user password goes here...`
-MYSQL_DB=`MYSQL database name goes here...`
+MYSQL_DB=Mailbot
