@@ -13,9 +13,10 @@ CREATE TABLE emails(
     email_id INT AUTO_INCREMENT,
     correspondent_id INT NOT NULL,
     subject_line VARCHAR(256),
-    body_text TEXT,
+    body_text MEDIUMTEXT,
     sent_on DATETIME,
     read_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    message_uid INT UNSIGNED UNIQUE;
     PRIMARY KEY (email_id),
     FOREIGN KEY (correspondent_id) 
     REFERENCES correspondent_whitelist(correspondent_id)
@@ -24,5 +25,5 @@ CREATE TABLE emails(
 );
 
 -- fallback default
-INSERT INTO correspondent_whitelist(correspondent_id, preferred_name, email_address)
-VALUES (0, 'UNKNOWN', '?');
+INSERT INTO correspondent_whitelist(preferred_name, email_address)
+VALUES ('UNKNOWN', '?');
