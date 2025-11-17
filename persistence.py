@@ -2,8 +2,8 @@ import atexit
 import mysql.connector
 
 class db_controller:
-	INSERT_MAIL="INSERT INTO emails (sender, subject, body) VALUES (%s, %s, %s)"
-	SELECT_ONE=""
+	INSERT_MAIL="INSERT INTO emails (sender, subject, body) VALUES (%s, %s, %s);"
+	SELECT_WHITELIST = "SELECT * FROM mailbot.correspondent_whitelist;"
 
 	def __init__(self, mysql_conn_params):
 		try:
@@ -15,20 +15,13 @@ class db_controller:
 
 		atexit.register(self._cleanup)
 
-	def create(self):
-		pass
-
-	def read_one(self):
-		pass
-
-	def read_all(self):
-		pass
-
-	def update(self):
-		pass
-
-	def delete(self):
-		pass
+	def fetch_white_list(self):
+		try:
+			self.mycursor.execute(self.SELECT_WHITELIST)
+			return self.mycursor.fetchall()
+		except Exception as e:
+			print("Failed to fetch whitelist: {}".format(e))
+			exit(1)
 
 	def _cleanup(self):
 		if not self.mycursor:
