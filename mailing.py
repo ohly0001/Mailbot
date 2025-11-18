@@ -122,6 +122,7 @@ class mail_controller:
 		epoch = datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
 		results.sort(key=lambda r: r['sent_on'] or epoch)
 
+		print("{} unread email(s) was fetched from the Gmail Inbox".format(len(results)))
 		return results
 
 	def _cleanup(self):
@@ -130,3 +131,4 @@ class mail_controller:
 		except:
 			pass  # mailbox may already be closed
 		self.mail.logout()
+		print("Disconnected from Gmail Servers")

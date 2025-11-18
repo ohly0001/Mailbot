@@ -1,5 +1,6 @@
 from imaplib import IMAP4_SSL
 from os import getenv
+import time
 from dotenv import load_dotenv
 from mailing import mail_controller
 from persistence import db_controller
@@ -7,6 +8,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Step 0 Initialization
 load_dotenv()
+
+SCAN_INTERVAL = int(getenv('SCAN_INTERVAL'))
 
 # Step 0c Load AI model
 MODEL_NAME = getenv('MODEL')
@@ -28,7 +31,7 @@ db = db_controller(MYSQL_CONN_PARAMS)
 
 print("Connected to MySQL DB!")
 
-whitelist = db.fetch_white_list()
+whitelist = db.select_whitelist()
 
 # Step 0b Connect to Gmail
 print("Connecting to Gmail Servers...")
@@ -42,33 +45,36 @@ mail = mail_controller(MAIL_CONN_PARAMS, whitelist)
 
 print("Connected to Gmail Servers!")
 
-while True:
-	# Step 1 Read Inbox (with whitelist checking)
-	inbox_results = mail.fetch_unread()
+try:
+	while True:
+		# Step 1 Read Inbox (with whitelist checking)
+		print("Fetching from Gmail Inbox")
+		inbox_results = mail.fetch_unread()
 
-	# Step 2 Process messages
-	# Step 2a persist message
+		# Step 2 Process messages
+		# Step 2a persist message
+		if inbox_results:
+			db_controller.insert_emails(inbox_results)
 
-
-
-	# Step 2b respond to message
-
-
-
-	# Step 2c send reply
+			# Step 2b respond to message
 
 
 
-	# Step 2d persist reply
+			# Step 2c send reply
 
 
 
-	# Step 2e repeat from step 2a until no messages remain
+			# Step 2d persist reply
 
 
 
-	# Step 3 pause for X seconds for new messages to arrive, repeat from step 1 or shutdown
+			# Step 2e repeat from step 2a until no messages remain
 
 
 
+		# Step 3 pause for X seconds for new messages to arrive, repeat from step 1 or shutdown
+		print("Sleeping for {}s".format(SCAN_INTERVAL))
+		time.sleep(SCAN_INTERVAL)
 
+except KeyboardInterrupt:
+    print("Terminating Mailbot")

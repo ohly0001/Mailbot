@@ -1,3 +1,5 @@
+SCAN_INTERVAL=60
+
 IMAP4_SSL=imap.gmail.com
 ADDRESS=`Bot address goes here...`
 APP_PASS=`Google app password goes here...`
