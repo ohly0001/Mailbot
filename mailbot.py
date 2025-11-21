@@ -40,8 +40,9 @@ print("Connecting to Gmail Servers...")
 
 MAIL_CONN_PARAMS = {
 	'host': getenv('MAIL_HOST'),
-	'user': getenv('MAIL_USER'),
-	'password': getenv('MAIL_PASSWORD')
+	'address': getenv('MAIL_ADDRESS'),
+	'password': getenv('MAIL_PASSWORD'),
+	'inbox': getenv('MAIL_INBOX')
 }
 mail = mail_controller(MAIL_CONN_PARAMS, whitelist)
 

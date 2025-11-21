@@ -2,8 +2,9 @@ import atexit
 import mysql.connector
 
 class db_controller:
-	INSERT_MAIL="INSERT INTO emails (correspondent_id, subject_line, body_text, sent_on, message_uid) VALUES (%(correspondent_id)s, %(subject_line)s, %(body_text)s, %(sent_on)s, %(message_uid)s);"
-	SELECT_WHITELIST = "SELECT * FROM mailbot.correspondent_whitelist;"
+	INSERT_MAIL="INSERT INTO emails (email_id, email_parent_id, correspondent_id, subject_line, body_text, sent_on, email_uid) VALUES (%(email_id)s, %(email_parent_id)s, %(correspondent_id)s, %(subject_line)s, %(body_text)s, %(sent_on)s, %(email_uid)s);"
+	SELECT_MAIL_BY_PARENT="SELECT (email_id, email_parent_id, correspondent_id, subject_line, body_text, sent_on, email_uid) FROM emails WHERE email_parent_id = %s"
+	SELECT_WHITELIST = "SELECT (correspondent_id, preferred_name, email_address, added_on) FROM correspondent_whitelist;"
 
 	def __init__(self, mysql_conn_params: dict[str, str]):
 		try:
@@ -46,9 +47,23 @@ class db_controller:
 			self.mydb.commit()
 			print("{} email(s) inserted".format(self.mycursor.rowcount))
    
-		except  mysql.connector.Error as err:
+		except mysql.connector.Error as err:
 			self.mydb.rollback()
 			print("Failed to insert emails: {}".format(err))
+
+	def select_email_thread(self, parent_id: int):
+		try:
+			results = []
+			while parent_id:
+				result = self.mycursor(self.SELECT_MAIL_BY_PARENT, parent_id)
+				results.append(result)
+				parent_id = result['email_parent_id']
+			print("{} email(s) selected in thread".format(len(results)))
+			return results
+
+		except mysql.connector.Error as err:
+			print("Failed to retrieve thread: {}".format(err))
+			return []
 
 	def _cleanup(self):
 		if not self.mycursor:
