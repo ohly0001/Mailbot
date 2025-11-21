@@ -11,19 +11,22 @@ CREATE TABLE correspondent_whitelist(
 
 CREATE TABLE emails(
     email_id INT AUTO_INCREMENT,
+    thread_id INT,                    
+    parent_id INT DEFAULT NULL,
     correspondent_id INT NOT NULL,
     subject_line VARCHAR(256),
     body_text MEDIUMTEXT,
     sent_on DATETIME,
     read_on DATETIME DEFAULT CURRENT_TIMESTAMP,
-    message_uid INT UNSIGNED UNIQUE;
+    message_uid INT UNSIGNED UNIQUE,
     PRIMARY KEY (email_id),
-    FOREIGN KEY (correspondent_id) 
-    REFERENCES correspondent_whitelist(correspondent_id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+    FOREIGN KEY (correspondent_id)
+        REFERENCES correspondent_whitelist(correspondent_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (thread_id)
+        REFERENCES emails(email_id)
+        ON DELETE SET NULL,
+    FOREIGN KEY (parent_id)
+        REFERENCES emails(email_id)
+        ON DELETE SET NULL
 );
-
--- fallback default
-INSERT INTO correspondent_whitelist(preferred_name, email_address)
-VALUES ('UNKNOWN', '?');

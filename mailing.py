@@ -9,6 +9,7 @@ from dateutil import parser as dateparser
 class mail_controller:
 	def __init__(self, mail_conn_params, whitelist):
 		try:
+			self.mail_conn_params = mail_conn_params
 			self.mail = IMAP4_SSL(mail_conn_params['host'])
 			self.mail.login(mail_conn_params['user'], mail_conn_params['password'])
 		except Exception as e:
@@ -23,6 +24,10 @@ class mail_controller:
 		}
 		
 		self.fallback_id = self.address_id_mapping['?']
+
+	def fetch_thread(self):
+		#TODO 
+		pass
 
 	def fetch_unread(self):
 		self.mail.select("INBOX")

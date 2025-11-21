@@ -4,6 +4,7 @@ import time
 from dotenv import load_dotenv
 from mailing import mail_controller
 from persistence import db_controller
+from transformer import ai_controller
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Step 0 Initialization
@@ -12,11 +13,12 @@ load_dotenv()
 SCAN_INTERVAL = int(getenv('SCAN_INTERVAL'))
 
 # Step 0c Load AI model
+print("Loading Model...")
+
 MODEL_NAME = getenv('MODEL')
-print("Loading {}...".format(MODEL_NAME))
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
-print("Loaded {}!".format(MODEL_NAME))
+transformer = ai_controller(MODEL_NAME)
+
+print("Loaded Model ({})!".format(MODEL_NAME))
 
 # Step 0a Connect to DB
 print("Connecting to MySQL DB...")
@@ -49,28 +51,25 @@ try:
 	while True:
 		# Step 1 Read Inbox (with whitelist checking)
 		print("Fetching from Gmail Inbox")
-		inbox_results = mail.fetch_unread()
+		inbox = mail.fetch_unread()
 
 		# Step 2 Process messages
 		# Step 2a persist message
-		if inbox_results:
-			db_controller.insert_emails(inbox_results)
+		if inbox:
+			db_controller.insert_emails(inbox)
 
-			# Step 2b respond to message
+			for msg in inbox:
+				# Step 2b respond to message
+				msg_stack = []
+				rsp = transformer(msg_stack)
+    
+				# Step 2c persist reply
+				db_controller.insert_email(rsp)
 
+				# Step 2d send reply
+				mail.send_reply(rsp)
 
-
-			# Step 2c send reply
-
-
-
-			# Step 2d persist reply
-
-
-
-			# Step 2e repeat from step 2a until no messages remain
-
-
+		# Step 2e repeat from step 2a until no messages remain
 
 		# Step 3 pause for X seconds for new messages to arrive, repeat from step 1 or shutdown
 		print("Sleeping for {}s".format(SCAN_INTERVAL))
