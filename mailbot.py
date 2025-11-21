@@ -59,16 +59,16 @@ try:
 		if inbox:
 			db_controller.insert_emails(inbox)
 
-			for msg in inbox:
+			for in_msg in inbox:
 				# Step 2b respond to message
-				msg_stack = []
-				rsp = transformer(msg_stack)
-    
-				# Step 2c persist reply
-				db_controller.insert_email(rsp)
+				msg_stack = db_controller.select_email_thread(in_msg['email_parent_id'])
+				rsp_text = transformer(msg_stack)
 
 				# Step 2d send reply
-				mail.send_reply(rsp)
+				rsp_msg = mail.send_reply(rsp_text, parent_id=in_msg['email_id'])
+	
+				# Step 2c persist reply
+				db_controller.insert_email(rsp_msg)
 
 		# Step 2e repeat from step 2a until no messages remain
 

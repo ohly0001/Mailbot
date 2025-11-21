@@ -1,31 +1,29 @@
 CREATE DATABASE IF NOT EXISTS Mailbot;
 USE Mailbot;
 
-CREATE TABLE correspondent_whitelist(
-    correspondent_id INT AUTO_INCREMENT,
-    preferred_name VARCHAR(100),
-    email_address VARCHAR(254) UNIQUE NOT NULL,
-    added_on DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (correspondent_id)
+CREATE TABLE address_whitelist (
+    whitelist_uid INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    whitelisted_name VARCHAR(100),
+    whitelisted_address VARCHAR(255) NOT NULL UNIQUE,
+    whitelisted_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE emails(
-    email_id INT,                 
-    email_parent_id INT DEFAULT NULL,
-    correspondent_id INT NOT NULL,
-    subject_line VARCHAR(256),
+CREATE TABLE emails (
+    email_uid INT UNSIGNED PRIMARY KEY,
+    email_parent_id VARCHAR(255) NULL,
+    email_id VARCHAR(255) NOT NULL UNIQUE,
+    subject_line VARCHAR(512),
+    sender_name VARCHAR(255),
+    sender_address VARCHAR(255),
     body_text MEDIUMTEXT,
     sent_on DATETIME,
     read_on DATETIME DEFAULT CURRENT_TIMESTAMP,
-    email_uid INT UNSIGNED UNIQUE,
-    PRIMARY KEY (email_uid),
-    FOREIGN KEY (correspondent_id)
-        REFERENCES correspondent_whitelist(correspondent_id)
+    FOREIGN KEY (email_parent_id)
+        REFERENCES emails(email_id)
         ON DELETE CASCADE,
-    FOREIGN KEY (thread_id)
-        REFERENCES emails(email_id)
-        ON DELETE SET NULL,
-    FOREIGN KEY (parent_id)
-        REFERENCES emails(email_id)
-        ON DELETE SET NULL
+    FOREIGN KEY (sender_address)
+        REFERENCES address_whitelist(whitelisted_address)
+        ON DELETE CASCADE
 );
+
+CREATE INDEX email_idx ON emails(email_id, email_parent_id);

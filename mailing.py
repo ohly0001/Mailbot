@@ -68,11 +68,11 @@ class mail_controller:
 			subject = str(make_header(decode_header(msg.get("Subject"))))
 
 			# Sender
-			sender = msg.get("From")
-
+			sender_name, sender_email = parseaddr(msg.get("From"))
+   
 			# Message-ID and Parent-ID
 			message_id = msg.get("Message-ID")
-			parent_id = msg.get("In-Reply-To")
+			parent_id = msg.get("In-Reply-To", None)
 
 			# UID parsing from fetch response
 			uid = None
@@ -81,6 +81,7 @@ class mail_controller:
 					resp = part[0].decode()
 					if "UID" in resp:
 						uid = resp.split("UID")[1].split()[0]
+						uid = int(uid)
 
 			# Sending time
 			sending_time = None
@@ -99,10 +100,11 @@ class mail_controller:
 
 			messages.append({
 				"email_uid": uid,
-				"email_id": message_id,
 				"email_parent_id": parent_id,
+				"email_id": message_id,
 				"subject_line": subject,
-				"correspondent_id": correspondent_id,
+				"sender_name": sender_name,
+				"sender_address": sender_email,
 				"body_text": body,
 				"sent_on": sending_time
 			})
