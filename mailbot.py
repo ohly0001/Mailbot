@@ -40,7 +40,7 @@ print("Connecting to Gmail Servers...")
 
 MAIL_CONN_PARAMS = {
 	'host': getenv('MAIL_HOST'),
-	'address': getenv('MAIL_ADDRESS'),
+	'user': getenv('MAIL_USER'),
 	'password': getenv('MAIL_PASSWORD'),
 	'inbox': getenv('MAIL_INBOX')
 }

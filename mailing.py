@@ -11,16 +11,12 @@ class mail_controller:
 			self.conn = IMAP4_SSL(mail_conn_params['host'])
 			self.conn.login(mail_conn_params['user'], mail_conn_params['password'])
 			self.conn.select(mail_conn_params['inbox'])
-		except Exception as e:
-			print("Failed to connect to mail server: {}".format(e))
+		except IMAP4_SSL.error as err:
+			print(f"Failed to connect to mail server: {err}")
 			exit(2)
-
 		atexit.register(self._cleanup)
 
-		self.address_id_mapping = {
-			row['email_address'].lower(): row['correspondent_id']
-			for row in whitelist
-		}
+		self.whitelist = tuple(row['whitelisted_address'] for row in whitelist)
 
 	def fetch_unread(self) -> list[dict]:
 		messages = []
@@ -39,10 +35,16 @@ class mail_controller:
 			raw_email = msg_data[0][1]
 			msg = message_from_bytes(raw_email)
 
+			# Mark message as seen (silently)
+			try:
+				self.conn.store(num, '+FLAGS.SILENT', '\\Seen')
+			except IMAP4_SSL.error as err:
+				print(f"Issue encountered during store flagging. Skipping flagging: {err}")
+
 			sender_name, sender_email = parseaddr(msg.get("From"))
 			sender_email = sender_email.lower()
 			if sender_email not in self.address_id_mapping.keys():
-				print("Email received that is not in whitelist: {}".format(sender_email))
+				print(f"Email received that is not in whitelist: {sender_email}")
 				continue
 			correspondent_id = self.address_id_mapping[sender_email.lower()]
 
@@ -62,6 +64,7 @@ class mail_controller:
 
 			# Skip message if no plain text body found
 			if body is None:
+				print("Email received with no plaintext content. Skipping email.")
 				continue
 
 			# Decode subject
@@ -91,12 +94,6 @@ class mail_controller:
 					sending_time = parsedate_to_datetime(date_header)
 				except Exception:
 					sending_time = date_header  # fallback to raw string if parsing fails
-
-			# Mark message as seen (silently)
-			try:
-				self.conn.store(num, '+FLAGS.SILENT', '\\Seen')
-			except IMAP4_SSL.error as err:
-				print("Issue encountered during store flagging: {}".format(err))
 
 			messages.append({
 				"email_uid": uid,
