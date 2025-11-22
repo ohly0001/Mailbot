@@ -1,3 +1,6 @@
 .env
 __pycache__/
 dev-only/
+
+!README.md
+!env-template.txt
