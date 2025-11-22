@@ -36,7 +36,7 @@ class db_controller:
         try:
             self.mycursor.execute(self.SELECT_WHITELIST)
             results = self.mycursor.fetchall()
-            print(f"{len(results)} whitelist correspondent(s) selected")
+            print(f"{len(results)} whitelist entries(s) selected")
             return results
         except Error as err:
             print(f"Failed to fetch whitelist: {err}")

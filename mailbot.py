@@ -57,18 +57,18 @@ try:
 		# Step 2 Process messages
 		# Step 2a persist message
 		if inbox:
-			db_controller.insert_emails(inbox)
+			db.insert_emails(inbox)
 
 			for in_msg in inbox:
 				# Step 2b respond to message
-				msg_stack = db_controller.select_email_thread(in_msg['email_parent_id'])
+				msg_stack = db.select_email_thread(in_msg['email_parent_id'])
 				rsp_text = transformer(msg_stack)
 
 				# Step 2d send reply
 				rsp_msg = mail.send_reply(rsp_text, parent_id=in_msg['email_id'])
 	
 				# Step 2c persist reply
-				db_controller.insert_email(rsp_msg)
+				db.insert_email(rsp_msg)
 
 		# Step 2e repeat from step 2a until no messages remain
 

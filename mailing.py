@@ -1,8 +1,10 @@
 import atexit
+from datetime import datetime
+from dateutil.tz import tzlocal
 from email import message_from_bytes
 from email.header import decode_header, make_header
 from email.utils import parseaddr, parsedate_to_datetime
-from imaplib import IMAP4_SSL
+from imaplib import IMAP4_SSL, IMAP4
 
 class mail_controller:
 	def __init__(self, mail_conn_params, whitelist):
@@ -11,7 +13,7 @@ class mail_controller:
 			self.conn = IMAP4_SSL(mail_conn_params['host'])
 			self.conn.login(mail_conn_params['user'], mail_conn_params['password'])
 			self.conn.select(mail_conn_params['inbox'])
-		except IMAP4_SSL.error as err:
+		except IMAP4.error as err:
 			print(f"Failed to connect to mail server: {err}")
 			exit(2)
 		atexit.register(self._cleanup)
@@ -30,6 +32,7 @@ class mail_controller:
 			# Fetch UID and RFC822 message
 			status, msg_data = self.conn.fetch(num, '(RFC822 UID)')
 			if status != 'OK':
+				print(f"Email received has status {status}. Skipping email.")
 				continue
 
 			raw_email = msg_data[0][1]
@@ -38,15 +41,29 @@ class mail_controller:
 			# Mark message as seen (silently)
 			try:
 				self.conn.store(num, '+FLAGS.SILENT', '\\Seen')
-			except IMAP4_SSL.error as err:
+			except IMAP4.error as err:
 				print(f"Issue encountered during store flagging. Skipping flagging: {err}")
 
 			sender_name, sender_email = parseaddr(msg.get("From"))
 			sender_email = sender_email.lower()
-			if sender_email not in self.address_id_mapping.keys():
-				print(f"Email received that is not in whitelist: {sender_email}")
+			if sender_email not in self.whitelist:
+				print(f"{sender_email} is not in whitelist. Skipping email.")
 				continue
-			correspondent_id = self.address_id_mapping[sender_email.lower()]
+
+			# UID parsing from fetch response
+			uid = None
+			for part in msg_data:
+				if isinstance(part, tuple):
+					resp = part[0].decode()
+					if "UID " in resp:
+						try:
+							uid = int(resp.split("UID ", 1)[1].split()[0])
+						except ValueError:
+							uid = None
+  
+			if uid is None:
+				print("Email received without UID. Skipping email.")
+				continue
 
 			# Get email body (plain text only)
 			body = None
@@ -56,35 +73,24 @@ class mail_controller:
 					content_disposition = str(part.get("Content-Disposition"))
 					if content_type == "text/plain" and "attachment" not in content_disposition:
 						body_bytes = part.get_payload(decode=True)
-						body = body_bytes.decode(part.get_content_charset() or 'utf-8', errors='ignore')
+						body = body_bytes.decode(part.get_content_charset() or 'utf-8', errors='ignore').strip()
 						break
 			else:
 				if msg.get_content_type() == "text/plain":
-					body = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8', errors='ignore')
+					body = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8', errors='ignore').strip()
 
 			# Skip message if no plain text body found
 			if body is None:
-				print("Email received with no plaintext content. Skipping email.")
+				print("Email received without plaintext content. Skipping email.")
 				continue
 
 			# Decode subject
-			subject = str(make_header(decode_header(msg.get("Subject"))))
-
-			# Sender
-			sender_name, sender_email = parseaddr(msg.get("From"))
+			subject_raw = msg.get("Subject") or ""
+			subject = str(make_header(decode_header(subject_raw)))
    
 			# Message-ID and Parent-ID
 			message_id = msg.get("Message-ID")
-			parent_id = msg.get("In-Reply-To", None)
-
-			# UID parsing from fetch response
-			uid = None
-			for part in msg_data:
-				if isinstance(part, tuple):
-					resp = part[0].decode()
-					if "UID" in resp:
-						uid = resp.split("UID")[1].split()[0]
-						uid = int(uid)
+			parent_id = msg.get("In-Reply-To")
 
 			# Sending time
 			sending_time = None
@@ -93,7 +99,7 @@ class mail_controller:
 				try:
 					sending_time = parsedate_to_datetime(date_header)
 				except Exception:
-					sending_time = date_header  # fallback to raw string if parsing fails
+					sending_time = datetime.now(tzlocal())  # fallback to current date
 
 			messages.append({
 				"email_uid": uid,
@@ -111,7 +117,7 @@ class mail_controller:
 	def _cleanup(self):
 		try:
 			self.conn.close()
-		except IMAP4_SSL.error as err:
+		except IMAP4.error as err:
 			print("Issue encountered during inbox closure: {}".format(err))
 		self.conn.logout()
 		print("Disconnected from Gmail Servers")
