@@ -1,5 +1,7 @@
 import atexit
 from datetime import datetime
+from email.message import EmailMessage
+import smtplib
 from dateutil.tz import tzlocal
 from email import message_from_bytes
 from email.header import decode_header, make_header
@@ -10,27 +12,39 @@ class mail_controller:
 	def __init__(self, mail_conn_params, whitelist):
 		try:
 			self.mail_conn_params = mail_conn_params
-			self.conn = IMAP4_SSL(mail_conn_params['host'])
-			self.conn.login(mail_conn_params['user'], mail_conn_params['password'])
-			self.conn.select(mail_conn_params['inbox'])
+			self.imap_conn = IMAP4_SSL(mail_conn_params['imap_host'])
+			self.imap_conn.login(mail_conn_params['imap_user'], mail_conn_params['imap_password'])
+			self.smtp_conn = smtplib.SMTP_SSL(mail_conn_params['smtp_host'], mail_conn_params['smtp_port'])
+			self.smtp_conn.login(mail_conn_params['smtp_user'], mail_conn_params['smtp_password'])
+			self.imap_conn.select(mail_conn_params['inbox'])
+
 		except IMAP4.error as err:
-			print(f"Failed to connect to mail server: {err}")
+			print(f"Failed to imap_connect to mail server: {err}")
 			exit(2)
 		atexit.register(self._cleanup)
 
 		self.whitelist = tuple(row['whitelisted_address'] for row in whitelist)
 
+	def send_reply(self, to_addr, subject, body):
+		msg = EmailMessage()
+		msg["From"] = self.mail_conn_params['smtp_user']
+		msg["To"] = to_addr
+		msg["Subject"] = subject
+		msg.set_content(body)
+    
+		self.smtp_conn.send_message(msg)
+
 	def fetch_unread(self) -> list[dict]:
 		messages = []
 
 		# Search for unread messages
-		status, data = self.conn.search(None, 'UNSEEN')
+		status, data = self.imap_conn.search(None, 'UNSEEN')
 		if status != 'OK':
 			return messages
 
 		for num in data[0].split():
 			# Fetch UID and RFC822 message
-			status, msg_data = self.conn.fetch(num, '(RFC822 UID)')
+			status, msg_data = self.imap_conn.fetch(num, '(RFC822 UID)')
 			if status != 'OK':
 				print(f"Email received has status {status}. Skipping email.")
 				continue
@@ -40,7 +54,7 @@ class mail_controller:
 
 			# Mark message as seen (silently)
 			try:
-				self.conn.store(num, '+FLAGS.SILENT', '\\Seen')
+				self.imap_conn.store(num, '+FLAGS.SILENT', '\\Seen')
 			except IMAP4.error as err:
 				print(f"Issue encountered during store flagging. Skipping flagging: {err}")
 
@@ -116,8 +130,9 @@ class mail_controller:
 
 	def _cleanup(self):
 		try:
-			self.conn.close()
+			self.imap_conn.close()
 		except IMAP4.error as err:
 			print("Issue encountered during inbox closure: {}".format(err))
-		self.conn.logout()
-		print("Disconnected from Gmail Servers")
+		self.imap_conn.logout()
+		self.smtp_conn.quit()
+		print("Disimap_connected from Gmail Servers")

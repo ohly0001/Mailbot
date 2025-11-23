@@ -1,11 +1,9 @@
-from imaplib import IMAP4_SSL
 from os import getenv
 import time
 from dotenv import load_dotenv
 from mailing import mail_controller
 from persistence import db_controller
 from transformer import ai_controller
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Step 0 Initialization
 load_dotenv()
@@ -39,10 +37,14 @@ whitelist = db.select_whitelist()
 print("Connecting to Gmail Servers...")
 
 MAIL_CONN_PARAMS = {
-	'host': getenv('MAIL_HOST'),
-	'user': getenv('MAIL_USER'),
-	'password': getenv('MAIL_PASSWORD'),
-	'inbox': getenv('MAIL_INBOX')
+	'imap_host': getenv('MAIL_IMAP_HOST'),
+	'imap_user': getenv('MAIL_IMAP_USER'),
+	'imap_password': getenv('MAIL_IMAP_PASSWORD'),
+	'imap_inbox': getenv('MAIL_IMAP_INBOX'),
+	'smtp_host': getenv('MAIL_SMTP_HOST'),
+	'smtp_port': getenv('MAIL_SMTP_PORT'),
+	'smtp_user': getenv('MAIL_SMTP_USER'),
+	'smtp_password': getenv('MAIL_SMTP_PASSWORD')
 }
 mail = mail_controller(MAIL_CONN_PARAMS, whitelist)
 
