@@ -1,13 +1,22 @@
-SCAN_INTERVAL=60
+FAST_SCAN_INTERVAL=300
+SLOW_SCAN_INTERVAL=3600
+MESSAGE_THROTTLING=12
 
-IMAP4_SSL=imap.gmail.com
-ADDRESS=`Bot address goes here...`
-APP_PASS=`Google app password goes here...`
+MAIL_IMAP_HOST=imap.gmail.com
+MAIL_IMAP_USER=`Bot inbox address goes here...`
+MAIL_IMAP_PASSWORD=hrxz ccyl nqvd iudp
+MAIL_IMAP_INBOX=INBOX
 
-ACCESS_TOKEN=`Huggingface account access token goes here...`
+MAIL_SMTP_HOST=smtp.gmail.com
+MAIL_SMTP_PORT=465
+MAIL_SMTP_USER=`Bot outbox address goes here...`
+MAIL_SMTP_PASSWORD=`Google app password goes here...`
+
+ACCESS_TOKEN=`Hugging Face account access token goes here...`
 MODEL=meta-llama/Llama-2-7b-chat-hf
 TF_ENABLE_ONEDNN_OPTS=0
 
+MYSQL_HOST=localhost
 MYSQL_USER=`MySQL user name goes here...`
-MYSQL_PASS=`MySQL user password goes here...`
+MYSQL_PASSWORD=`MySQL user password goes here...`
 MYSQL_DB=Mailbot
