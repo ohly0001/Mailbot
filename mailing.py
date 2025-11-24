@@ -1,12 +1,13 @@
 import atexit
 from datetime import datetime
+from email.contentmanager import ContentManager
 from email.message import EmailMessage
-import smtplib
 from dateutil.tz import tzlocal
 from email import message_from_bytes
 from email.header import decode_header, make_header
 from email.utils import parseaddr, parsedate_to_datetime
 from imaplib import IMAP4_SSL, IMAP4
+from smtplib import SMTP_SSL, SMTPException
 
 class mail_controller:
 	def __init__(self, mail_conn_params, whitelist):
@@ -14,7 +15,7 @@ class mail_controller:
 			self.mail_conn_params = mail_conn_params
 			self.imap_conn = IMAP4_SSL(mail_conn_params['imap_host'])
 			self.imap_conn.login(mail_conn_params['imap_user'], mail_conn_params['imap_password'])
-			self.smtp_conn = smtplib.SMTP_SSL(mail_conn_params['smtp_host'], mail_conn_params['smtp_port'])
+			self.smtp_conn = SMTP_SSL(mail_conn_params['smtp_host'], mail_conn_params['smtp_port'])
 			self.smtp_conn.login(mail_conn_params['smtp_user'], mail_conn_params['smtp_password'])
 			self.imap_conn.select(mail_conn_params['inbox'])
 
@@ -25,14 +26,28 @@ class mail_controller:
 
 		self.whitelist = tuple(row['whitelisted_address'] for row in whitelist)
 
-	def send_reply(self, to_addr, subject, body):
-		msg = EmailMessage()
-		msg["From"] = self.mail_conn_params['smtp_user']
-		msg["To"] = to_addr
-		msg["Subject"] = subject
-		msg.set_content(body)
-    
-		self.smtp_conn.send_message(msg)
+	def send_reply(self, original_email, rsp_text):
+		try:
+			msg = EmailMessage()
+
+			# To
+			msg["To"] = original_email["sender_address"]
+			msg["From"] = self.mail_conn_params["smtp_user"]
+
+			# Threading headers
+			msg["In-Reply-To"] = original_email["email_id"]
+
+			# Subject
+			subject = original_email['subject_line']
+			msg["Subject"] = subject if subject.lower().startswith("Re:") else f"Re: {subject}"
+
+			# Body
+			msg.set_content("This is the email body")
+   
+			self.smtp_conn.send_message(msg)
+   
+		except SMTPException as e: 
+			print(f"Issue encountered when sending message: {e}")
 
 	def fetch_unread(self) -> list[dict]:
 		messages = []
