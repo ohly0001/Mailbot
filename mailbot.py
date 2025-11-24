@@ -21,7 +21,8 @@ MESSAGE_THROTTLING = int(getenv('MESSAGE_THROTTLING'))  # e.g., 12s per message 
 # -------------------------
 print("Loading AI Model...")
 MODEL_NAME = getenv('MODEL')
-transformer = ai_controller(MODEL_NAME)
+MAX_TOKENS = getenv('MAX_OUTPUT_TOKENS')
+transformer = ai_controller(MODEL_NAME, MAX_TOKENS)
 print(f"Loaded Model ({MODEL_NAME})!")
 
 # -------------------------

@@ -6,10 +6,9 @@ import torch
 class ai_controller:
     SYS_HEADER = "You are a helpful email correspondent. The person you are replying to is {}."
 
-    def __init__(self, model_name: str, max_tokens_context: int, max_tokens_output: int):
+    def __init__(self, model_name: str, max_tokens_output: int):
         try:
             self.model_name = model_name
-            self.max_tokens_context = max_tokens_context
             self.max_tokens_output = max_tokens_output
 
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -18,6 +17,14 @@ class ai_controller:
                 torch_dtype=torch.float16,
                 device_map="auto"
             )
+
+            # Use model's max context length if available
+            if hasattr(self.tokenizer, "model_max_length"):
+                self.max_tokens_context = self.tokenizer.model_max_length
+            else:
+                # fallback to 4096 if unknown
+                self.max_tokens_context = 4096
+
         except Exception as e:
             print(f"Failed to setup transformer: {e}")
             exit(3)

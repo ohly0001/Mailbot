@@ -14,6 +14,7 @@ MAIL_SMTP_PASSWORD=`Google app password goes here...`
 
 ACCESS_TOKEN=`Hugging Face account access token goes here...`
 MODEL=meta-llama/Llama-2-7b-chat-hf
+MAX_OUTPUT_TOKENS=255
 TF_ENABLE_ONEDNN_OPTS=0
 
 MYSQL_HOST=localhost
