@@ -5,7 +5,7 @@ from email.message import EmailMessage
 from dateutil.tz import tzlocal
 from email import message_from_bytes
 from email.header import decode_header, make_header
-from email.utils import parseaddr, parsedate_to_datetime
+from email.utils import make_msgid, parseaddr, parsedate_to_datetime
 from imaplib import IMAP4_SSL, IMAP4
 from smtplib import SMTP_SSL, SMTPException
 
@@ -30,24 +30,49 @@ class mail_controller:
 		try:
 			msg = EmailMessage()
 
-			# To
+			# To / From
 			msg["To"] = original_email["sender_address"]
 			msg["From"] = self.mail_conn_params["smtp_user"]
 
+			# Subject (prepend Re: if needed)
+			subject = original_email['subject_line']
+			if not subject.lower().startswith("re:"):
+				subject = f"Re: {subject}"
+			msg["Subject"] = subject
+
 			# Threading headers
 			msg["In-Reply-To"] = original_email["email_id"]
+			references = original_email.get("references")
+			if references:
+				msg["References"] = f"{references} {original_email['email_id']}"
+			else:
+				msg["References"] = original_email['email_id']
 
-			# Subject
-			subject = original_email['subject_line']
-			msg["Subject"] = subject if subject.lower().startswith("Re:") else f"Re: {subject}"
+			# Generate a new message ID
+			message_id = make_msgid()
+			msg["Message-ID"] = message_id
 
 			# Body
-			msg.set_content("This is the email body")
-   
+			msg.set_content(rsp_text)
+
+			# Send
 			self.smtp_conn.send_message(msg)
-   
-		except SMTPException as e: 
+
+			# Prepare dictionary for persistence
+			return {
+				"email_uid": None,  # SMTP replies typically do not get a UID
+				"email_parent_id": original_email["email_id"],
+				"email_id": message_id,
+				"subject_line": subject,
+				"sender_name": "Email Bot",
+				"sender_address": self.mail_conn_params['smtp_user'],
+				"body_text": rsp_text,
+				"sent_on": datetime.now(tzlocal())
+			}
+
+		except SMTPException as e:
 			print(f"Issue encountered when sending message: {e}")
+			return None
 
 	def fetch_unread(self) -> list[dict]:
 		messages = []

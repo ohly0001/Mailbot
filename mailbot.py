@@ -67,10 +67,10 @@ try:
 				rsp_text = transformer(msg_stack)
 
 				# Step 2d send reply
-				mail.send_reply(in_msg, rsp_text)
+				out_msg = mail.send_reply(in_msg, rsp_text)
 	
 				# Step 2c persist reply
-				db.insert_email()
+				db.insert_email(out_msg)
 
 		# Step 2e repeat from step 2a until no messages remain
 
